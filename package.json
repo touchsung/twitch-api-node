@@ -17,7 +17,8 @@
     "dotenv": "^16.0.3",
     "express": "^4.18.2",
     "obs-websocket-js": "^5.0.2",
-    "streamlabs-obs-socket-client": "^1.0.2"
+    "streamlabs-obs-socket-client": "^1.0.2",
+    "tmi.js": "^1.8.5"
   },
   "devDependencies": {
     "nodemon": "^2.0.22"
