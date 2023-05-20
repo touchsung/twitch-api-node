@@ -1,27 +1,25 @@
 const express = require("express");
 const client = require("./utils/streamlabsOBSClient");
+const twitchClient = require("./utils/connectTwitch");
 const app = express();
-const tmi = require("tmi.js");
-
 const port = process.env.PORT || 3000;
 
-const twitchConfig = {
-  channels: [process.env.TWITCH_CHANNEL],
+const main = async () => {
+  twitchClient.connect();
+
+  setInterval(async () => {
+    await client.connect();
+    client.walkSourcePosition("Pc", "Pet");
+  }, 500);
+
+  twitchClient.on("message", async (channel, tags, message, self) => {
+    if (message.toLocaleLowerCase().trim() === "!feed") {
+      client.increaseSourceScale("Pc", "Pet");
+    }
+  });
 };
 
-const twitchClient = new tmi.client(twitchConfig);
-twitchClient.on("connected", () => {
-  console.log("Connected to Twitch chat");
-});
-
-twitchClient.connect();
-
-twitchClient.on("message", async (channel, tags, message, self) => {
-  if (message.toLocaleLowerCase() === "!feed") {
-    await client.connect();
-    client.increaseSourceScale("Pc", "Pet");
-  }
-});
+main();
 
 app.listen(port, () => {
   console.log(`Server listening on port ${port}`);
