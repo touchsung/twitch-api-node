@@ -2,6 +2,10 @@ const StreamlabsOBSClient = require("streamlabs-obs-socket-client");
 const dotenv = require("dotenv").config();
 
 class MyStreamlabsOBSClient extends StreamlabsOBSClient {
+  constructor(opts) {
+    super(opts);
+    this.goForward = true;
+  }
   changeSourceProperty(sceneName, sourceName, properties) {
     const source = this.getSourceItemFromScene(sceneName, sourceName);
     const resource = `SceneItem["${source.sceneId}","${source.sceneItemId}","${source.sourceId}"]`;
@@ -19,10 +23,17 @@ class MyStreamlabsOBSClient extends StreamlabsOBSClient {
 
   increaseSourceScale(sceneName, sourceName) {
     const source = this.getSourceItemFromScene(sceneName, sourceName);
+    this.changeSourceScale(
+      sceneName,
+      sourceName,
+      source.transform.scale.x > 0
+        ? source.transform.scale.x + 0.05
+        : source.transform.scale.x - 0.05,
+      source.transform.scale.y + 0.05
+    );
     const properties = {
-      scale: {
-        x: source.transform.scale.x + 0.05,
-        y: source.transform.scale.y + 0.05,
+      position: {
+        y: 1080 - source.transform.scale.y * 120,
       },
     };
     this.changeSourceProperty(sceneName, sourceName, properties);
@@ -37,7 +48,6 @@ class MyStreamlabsOBSClient extends StreamlabsOBSClient {
     };
     this.changeSourceProperty(sceneName, sourceName, properties);
   }
-
   changeSourcePosition(sceneName, sourceName, posX, posY) {
     const properties = {
       position: {
@@ -46,6 +56,40 @@ class MyStreamlabsOBSClient extends StreamlabsOBSClient {
       },
     };
     this.changeSourceProperty(sceneName, sourceName, properties);
+  }
+
+  walkSourcePosition(sceneName, sourceName) {
+    const source = this.getSourceItemFromScene(sceneName, sourceName);
+    let step = 10;
+    let scaleX = source.transform.scale.x;
+    let startPosition;
+
+    if (source.transform.position.x < 0) {
+      this.goForward = true;
+      startPosition = Math.abs(source.transform.scale.x) * 170;
+    } else if (source.transform.position.x > 1920) {
+      this.goForward = false;
+      startPosition = 1920 - Math.abs(source.transform.scale.x) * 170;
+    }
+
+    if (startPosition) {
+      this.changeSourceScale(
+        sceneName,
+        sourceName,
+        scaleX * -1,
+        source.transform.scale.y
+      );
+    }
+    this.changeSourcePosition(
+      sceneName,
+      sourceName,
+      this.goForward
+        ? startPosition || source.transform.position.x + Math.abs(scaleX) * step
+        : startPosition ||
+            source.transform.position.x - Math.abs(scaleX) * step,
+      source.transform.position.y
+    );
+    this.turnSide = false;
   }
 }
 const client = new MyStreamlabsOBSClient({
