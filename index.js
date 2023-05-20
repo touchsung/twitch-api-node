@@ -17,6 +17,10 @@ const main = async () => {
       client.increaseSourceScale("Pc", "Pet");
     }
   });
+
+  app.get("/health", (req, res) => {
+    res.send("Status OK");
+  });
 };
 
 main();
